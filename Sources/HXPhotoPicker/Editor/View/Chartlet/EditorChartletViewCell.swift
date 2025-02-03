@@ -58,6 +58,7 @@ class EditorChartletViewCell: UICollectionViewCell {
         #if canImport(Kingfisher)
         if let image = image {
             imageView.image = image
+            imageView.tintColor = UIColor.white
             downloadCompletion = true
         }else if let url = url {
             imageView.kf.indicatorType = .activity
