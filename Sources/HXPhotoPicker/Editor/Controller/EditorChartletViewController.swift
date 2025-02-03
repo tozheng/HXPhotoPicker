@@ -149,7 +149,7 @@ public class EditorChartletViewController: HXBaseViewController, EditorChartletL
         }
         #if HXPICKER_ENABLE_PICKER
         if config.allowAddAlbum && !titles.isEmpty {
-            let chartlet = EditorChartletTitle(image: config.albumImageName.image)
+            let chartlet = EditorChartletTitle(image: .imageResource.editor.sticker.album.image)
             chartlet.isAlbum = true
             titles.append(chartlet)
         }
