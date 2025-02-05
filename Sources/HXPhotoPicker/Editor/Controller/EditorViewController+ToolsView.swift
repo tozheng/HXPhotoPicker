@@ -110,7 +110,7 @@ extension EditorViewController: EditorToolsViewDelegate {
     }
     
     func showToolsView() {
-        if !toolsView.isHidden && toolsView.alpha == 1 {
+        if !toolsView.isHidden && toolsView.alpha == 1 || config.toolsViewHidden {
             return
         }
         if let tool = selectedTool, tool.type == .graffiti, editorView.drawType == .canvas {
