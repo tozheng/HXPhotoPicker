@@ -42,6 +42,9 @@ extension EditorViewController: EditorChartletListDelegate {
             }
         }
     }
+    public func addSticker(_ image: UIImage) {
+        editorView.addSticker(image)
+    }
 }
 
 extension EditorViewController: EditorChartletViewControllerDelegate {
