@@ -101,6 +101,10 @@ open class EditorViewController: HXBaseViewController {
         initViews()
         addViews()
         initAsset()
+
+        if config.toolsViewHidden {
+            hideToolsView()
+        }
     }
     
     private func initViews() {
