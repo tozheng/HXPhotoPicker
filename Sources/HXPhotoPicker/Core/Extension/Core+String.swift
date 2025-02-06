@@ -119,7 +119,7 @@ extension String: HXPickerCompatibleValue {
         )
     }
     
-    func width(ofFont font: UIFont, maxHeight: CGFloat) -> CGFloat {
+    public func width(ofFont font: UIFont, maxHeight: CGFloat) -> CGFloat {
         size(
             ofAttributes: [NSAttributedString.Key.font: font],
             maxWidth: CGFloat(MAXFLOAT),

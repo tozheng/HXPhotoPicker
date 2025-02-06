@@ -45,6 +45,9 @@ extension EditorViewController: EditorChartletListDelegate {
     public func addSticker(_ image: UIImage) {
         editorView.addSticker(image)
     }
+    public func mergeSticker() {
+        processing()
+    }
 }
 
 extension EditorViewController: EditorChartletViewControllerDelegate {
