@@ -378,7 +378,7 @@ public struct PhotoTools {
                 height: Int(resultImage.height * ratio)
             )
             guard let image = resultImage.scaleToFillSize(size: size),
-                  let imageData = image.jpegData(compressionQuality: 1.0) else {
+                  let imageData = image.jpegData(compressionQuality: 0.5) else {
                 return data
             }
             resultImage = image
@@ -451,7 +451,7 @@ public struct PhotoTools {
                 height: Int(resultImage.height * ratio)
             )
             guard let image = resultImage.scaleToFillSize(size: size),
-                  let imageData = image.jpegData(compressionQuality: 1.0) else {
+                  let imageData = image.jpegData(compressionQuality: 0.5) else {
                 completionHandler(data)
                 return
             }
