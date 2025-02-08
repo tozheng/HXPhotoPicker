@@ -197,7 +197,7 @@ extension EditorAdjusterView {
             return
         }
         if let overlayImage = overlayImage,
-           let image = inputImage.merge(images: [overlayImage], scale: exportScale) {
+           let image = inputImage.merge(images: [overlayImage], scale: inputImage.scale) {
             inputImage = image
         }
         guard let image = PhotoTools.cropImage(inputImage, cropFactor: cropFactor) else {
