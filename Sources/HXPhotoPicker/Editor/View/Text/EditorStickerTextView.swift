@@ -10,26 +10,29 @@ import UIKit
 class EditorStickerTextView: UIView {
     let config: EditorConfiguration.Text
     var textView: UITextView!
-    private var textButton: UIButton!
-    private var flowLayout: UICollectionViewFlowLayout!
-    var collectionView: UICollectionView!
+    private var boldButton: UIButton!
+    private var italicButton: UIButton!
+    private var underlineButton: UIButton!
+    private var strikethroughButton: UIButton!
+    private var fontButton: UIButton!
+    private var colorButton: UIButton!
+    private var buttonBkView: UIView!
+    var customColorView: EditorStickerTextViewCell!
+    
+    var selectedFontFamilyName: String = UIFont.boldSystemFont(ofSize: 25).familyName {
+        didSet {
+            boldButton.isSelected = false
+            boldButton.isEnabled = UIFont(name: selectedFontFamilyName, size: config.font.pointSize)?.bold() != nil
+            italicButton.isSelected = false
+            italicButton.isEnabled = UIFont(name: selectedFontFamilyName, size: config.font.pointSize)?.italic() != nil
+            fontChanged(isBold: boldButton.isSelected, isItalic: italicButton.isSelected)
+        }
+    }
     
     var text: String {
         textView.text
     }
-    var currentSelectedIndex: Int = 0 {
-        didSet {
-            if currentSelectedIndex < 0 {
-                return
-            }
-            collectionView.scrollToItem(
-                at: IndexPath(item: currentSelectedIndex, section: 0),
-                at: .centeredHorizontally,
-                animated: true
-            )
-        }
-    }
-    
+    var currentSelectedIndex: Int = 0
     var customColor: PhotoEditorBrushCustomColor
     var isShowCustomColor: Bool {
         if #available(iOS 14.0, *), config.colors.count > 1 {
@@ -86,44 +89,69 @@ class EditorStickerTextView: UIView {
         textView.contentInset = .zero
         addSubview(textView)
         
-        textButton = UIButton(type: .custom)
-        textButton.setImage(.imageResource.editor.text.backgroundNormal.image, for: .normal)
-        textButton.setImage(.imageResource.editor.text.backgroundSelected.image, for: .selected)
-        textButton.addTarget(self, action: #selector(didTextButtonClick(button:)), for: .touchUpInside)
-        addSubview(textButton)
+        buttonBkView = UIView()
+        buttonBkView.backgroundColor = UIColor.gray.withAlphaComponent(0.6)
+        buttonBkView.layer.cornerRadius = 18
+        buttonBkView.clipsToBounds = true
+        addSubview(buttonBkView)
         
-        flowLayout = UICollectionViewFlowLayout()
-        flowLayout.scrollDirection = .horizontal
-        flowLayout.minimumInteritemSpacing = 5
-        flowLayout.itemSize = CGSize(width: 37, height: 37)
-        collectionView = UICollectionView(frame: .zero, collectionViewLayout: flowLayout)
-        collectionView.backgroundColor = .clear
-        collectionView.dataSource = self
-        collectionView.delegate = self
-        collectionView.showsVerticalScrollIndicator = false
-        collectionView.showsHorizontalScrollIndicator = false
-        if #available(iOS 11.0, *) {
-            collectionView.contentInsetAdjustmentBehavior = .never
-        }
-        collectionView.register(
-            EditorStickerTextViewCell.self,
-            forCellWithReuseIdentifier: "EditorStickerTextViewCellID"
-        )
-        addSubview(collectionView)
+        let selectedColor = UIColor(red: 23/255.0, green: 125/255.0, blue: 247/255.0, alpha: 1.0)
+        boldButton = UIButton(type: .custom)
+        boldButton.tintColor = UIColor.white
+        boldButton.setImage(UIImage(systemName: "bold"), for: .normal)
+        boldButton.setImage(UIImage(systemName: "bold")?.withColor(selectedColor), for: .selected)
+        boldButton.addTarget(self, action: #selector(didBoldButtonClick(button:)), for: .touchUpInside)
+        addSubview(boldButton)
+
+        italicButton = UIButton(type: .custom)
+        italicButton.tintColor = UIColor.white
+        italicButton.setImage(UIImage(systemName: "italic"), for: .normal)
+        italicButton.setImage(UIImage(systemName: "italic")?.withColor(selectedColor), for: .selected)
+        italicButton.addTarget(self, action: #selector(didItalicButtonClick(button:)), for: .touchUpInside)
+        addSubview(italicButton)
+
+        underlineButton = UIButton(type: .custom)
+        underlineButton.tintColor = UIColor.white
+        underlineButton.setImage(UIImage(systemName: "underline"), for: .normal)
+        underlineButton.setImage(UIImage(systemName: "underline")?.withColor(selectedColor), for: .selected)
+        underlineButton.addTarget(self, action: #selector(didUnderlineButtonClick(button:)), for: .touchUpInside)
+        addSubview(underlineButton)
+
+        strikethroughButton = UIButton(type: .custom)
+        strikethroughButton.tintColor = UIColor.white
+        strikethroughButton.setImage(UIImage(systemName: "strikethrough"), for: .normal)
+        strikethroughButton.setImage(UIImage(systemName: "strikethrough")?.withColor(selectedColor), for: .selected)
+        strikethroughButton.addTarget(self, action: #selector(didStrikethroughButtonClick(button:)), for: .touchUpInside)
+        addSubview(strikethroughButton)
+
+        fontButton = UIButton(type: .custom)
+        fontButton.tintColor = UIColor.white
+        fontButton.setImage(UIImage(systemName: "textformat"), for: .normal)
+        fontButton.addTarget(self, action: #selector(didFontButtonClick(button:)), for: .touchUpInside)
+        addSubview(fontButton)
+
+        customColorView = EditorStickerTextViewCell()
+        customColorView.customColor = customColor
+        addSubview(customColorView)
+
+        colorButton = UIButton(type: .custom)
+        colorButton.tintColor = UIColor.white
+        colorButton.addTarget(self, action: #selector(didColorButtonClick(button:)), for: .touchUpInside)
+        addSubview(colorButton)
+
+        selectedFontFamilyName = config.font.familyName
     }
     
     private func setupStickerText() {
         if let text = stickerText {
             showBackgroudColor = text.showBackgroud
             textView.text = text.text
-            textButton.isSelected = text.showBackgroud
         }
         setupTextAttributes()
     }
     
     private func setupTextConfig() {
         textView.tintColor = config.tintColor
-        textView.font = config.font
     }
     
     private func setupTextAttributes() {
@@ -152,24 +180,12 @@ class EditorStickerTextView: UIView {
                         changeTextColor(color: color)
                     }
                     currentSelectedColor = color
-                    currentSelectedIndex = index
-                    collectionView.selectItem(
-                        at: IndexPath(item: currentSelectedIndex, section: 0),
-                        animated: true,
-                        scrollPosition: .centeredHorizontally
-                    )
                     hasColor = true
                 }
             }else {
                 if index == 0 {
                     changeTextColor(color: color)
                     currentSelectedColor = color
-                    currentSelectedIndex = index
-                    collectionView.selectItem(
-                        at: IndexPath(item: currentSelectedIndex, section: 0),
-                        animated: true,
-                        scrollPosition: .centeredHorizontally
-                    )
                     hasColor = true
                 }
             }
@@ -178,10 +194,9 @@ class EditorStickerTextView: UIView {
             if let text = stickerText {
                 changeTextColor(color: text.textColor)
                 currentSelectedColor = text.textColor
-                currentSelectedIndex = -1
             }
         }
-        if textButton.isSelected {
+        if boldButton.isSelected {
             drawTextBackgroudColor()
         }
     }
@@ -202,6 +217,89 @@ class EditorStickerTextView: UIView {
         }
     }
     
+    private func fontChanged(isBold: Bool, isItalic: Bool) {
+        var font = UIFont(name: selectedFontFamilyName, size: config.font.pointSize)
+        if isBold && isItalic {
+            font = font?.boldItalic()
+        } else if isBold {
+            font = font?.bold()
+        } else if isItalic {
+            font = font?.italic()
+        }
+
+        textView.font = font
+        var attributes = typingAttributes
+        attributes[NSAttributedString.Key.font] = font
+        typingAttributes = attributes
+        textView.typingAttributes = typingAttributes
+        textView.attributedText = NSAttributedString(string: textView.text, attributes: typingAttributes)
+    }
+
+    @objc
+    private func didBoldButtonClick(button: UIButton) {
+        button.isSelected = !button.isSelected
+        fontChanged(isBold: boldButton.isSelected, isItalic: italicButton.isSelected)
+    }
+
+    @objc
+    private func didItalicButtonClick(button: UIButton) {
+        button.isSelected = !button.isSelected
+        fontChanged(isBold: boldButton.isSelected, isItalic: italicButton.isSelected)
+    }
+
+    @objc
+    private func didUnderlineButtonClick(button: UIButton) {
+        button.isSelected = !button.isSelected
+
+        var attributes = typingAttributes
+        if button.isSelected {
+            attributes[NSAttributedString.Key.underlineStyle] = NSUnderlineStyle.single.rawValue
+        } else {
+            attributes[NSAttributedString.Key.underlineStyle] = nil
+        }
+
+        typingAttributes = attributes
+        textView.typingAttributes = typingAttributes
+        textView.attributedText = NSAttributedString(string: textView.text, attributes: typingAttributes)
+    }
+
+    @objc
+    private func didStrikethroughButtonClick(button: UIButton) {
+        button.isSelected = !button.isSelected
+
+        var attributes = typingAttributes
+        if button.isSelected {
+            attributes[NSAttributedString.Key.strikethroughStyle] = NSUnderlineStyle.single.rawValue
+        } else {
+            attributes[NSAttributedString.Key.strikethroughStyle] = nil
+        }
+
+        typingAttributes = attributes
+        textView.typingAttributes = typingAttributes
+        textView.attributedText = NSAttributedString(string: textView.text, attributes: typingAttributes)
+    }
+
+    @objc
+    private func didFontButtonClick(button: UIButton) {
+        let fontConfig = UIFontPickerViewController.Configuration()
+        fontConfig.includeFaces = false
+        let fontPicker = UIFontPickerViewController(configuration: fontConfig)
+        fontPicker.delegate = self
+        viewController?.present(fontPicker, animated: true, completion: nil)
+    }
+
+    @objc
+    private func didColorButtonClick(button: UIButton) {
+        if #available(iOS 14.0, *) {
+            let vc = UIColorPickerViewController()
+            vc.delegate = self
+            vc.selectedColor = customColor.color
+            viewController?.present(vc, animated: true, completion: nil)
+            customColor.isFirst = false
+            customColor.isSelected = true
+        }
+    }
+
     private func addKeyboardNotificaition() {
         NotificationCenter.default.addObserver(
             self,
@@ -244,9 +342,8 @@ class EditorStickerTextView: UIView {
     
     override func layoutSubviews() {
         super.layoutSubviews()
-        flowLayout.sectionInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 12 + UIDevice.rightMargin)
-        textButton.frame = CGRect(
-            x: UIDevice.leftMargin,
+        boldButton.frame = CGRect(
+            x: 16,
             y: height,
             width: 50,
             height: 50
@@ -254,12 +351,12 @@ class EditorStickerTextView: UIView {
         if keyboardFrame.isEmpty {
             if UIDevice.isPad {
                 if config.modalPresentationStyle == .fullScreen {
-                    textButton.y = height - (UIDevice.bottomMargin + 50)
+                    boldButton.y = height - (UIDevice.bottomMargin + 50)
                 }else {
-                    textButton.y = height - 50
+                    boldButton.y = height - 50
                 }
             }else {
-                textButton.y = height - (UIDevice.bottomMargin + 50)
+                boldButton.y = height - (UIDevice.bottomMargin + 50)
             }
         }else {
             if UIDevice.isPad {
@@ -274,25 +371,42 @@ class EditorStickerTextView: UIView {
                     to: UIApplication._keyWindow
                 )
                 if buttonRect.maxY > keyboardFrame.minY {
-                    textButton.y = height - (buttonRect.maxY - keyboardFrame.minY + 50)
+                    boldButton.y = height - (buttonRect.maxY - keyboardFrame.minY + 50)
                 }else {
                     if config.modalPresentationStyle == .fullScreen {
-                        textButton.y = height - (UIDevice.bottomMargin + 50)
+                        boldButton.y = height - (UIDevice.bottomMargin + 50)
                     }else {
-                        textButton.y = height - 50
+                        boldButton.y = height - 50
                     }
                 }
             }else {
-                textButton.y = height - (50 + keyboardFrame.height)
+                boldButton.y = height - (50 + keyboardFrame.height)
             }
         }
-        collectionView.frame = CGRect(
-            x: textButton.frame.maxX,
-            y: textButton.y,
-            width: width - textButton.width,
-            height: 50
-        )
-        textView.frame = CGRect(x: 10, y: 0, width: width - 20, height: textButton.y)
+        italicButton.frame = boldButton.frame
+        italicButton.x = boldButton.frame.maxX
+
+        underlineButton.frame = italicButton.frame
+        underlineButton.x = italicButton.frame.maxX
+
+        strikethroughButton.frame = underlineButton.frame
+        strikethroughButton.x = underlineButton.frame.maxX
+
+        let buttonBkRect = CGRect(x: boldButton.frame.minX,
+                                  y: boldButton.frame.minY + 7,
+                                  width: strikethroughButton.frame.maxX - boldButton.frame.minX,
+                                  height: strikethroughButton.height - 14)
+        buttonBkView.frame = buttonBkRect
+
+        fontButton.frame = strikethroughButton.frame
+        fontButton.x = buttonBkRect.maxX + 12
+
+        colorButton.frame = fontButton.frame
+        colorButton.x = fontButton.frame.maxX
+
+        customColorView.center = colorButton.center
+
+        textView.frame = CGRect(x: 10, y: 0, width: width - 20, height: boldButton.y)
         textView.textContainerInset = UIEdgeInsets(
             top: 15,
             left: 15 + UIDevice.leftMargin,
@@ -307,6 +421,16 @@ class EditorStickerTextView: UIView {
     
     deinit {
         NotificationCenter.default.removeObserver(self)
+    }
+}
+
+extension EditorStickerTextView: UIFontPickerViewControllerDelegate {
+
+    func fontPickerViewControllerDidPickFont(_ viewController: UIFontPickerViewController) {
+        if let fontFamilyName = viewController.selectedFontDescriptor?.fontAttributes[.family] as? String {
+            selectedFontFamilyName = fontFamilyName
+        }
+        viewController.dismiss(animated: true)
     }
 }
 
@@ -356,7 +480,7 @@ class EditorStickerTextViewCell: UICollectionViewCell {
         let bgLayer = CAShapeLayer()
         bgLayer.contentsScale = UIScreen._scale
         bgLayer.frame = CGRect(x: 0, y: 0, width: 22, height: 22)
-        bgLayer.fillColor = UIColor.white.cgColor
+        bgLayer.fillColor = UIColor.black.cgColor
         let bgPath = UIBezierPath(
             roundedRect: CGRect(x: 1.5, y: 1.5, width: 19, height: 19),
             cornerRadius: 19 * 0.5

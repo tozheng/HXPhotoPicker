@@ -92,10 +92,7 @@ extension EditorStickerTextView: UIColorPickerViewControllerDelegate {
     
     func didSelectCustomColor(_ color: UIColor) {
         customColor.color = color
-        let cell = collectionView.cellForItem(
-            at: .init(item: currentSelectedIndex, section: 0)
-        ) as? EditorStickerTextViewCell
-        cell?.customColor = customColor
+        customColorView.customColor = customColor
         let color = customColor.color
         currentSelectedColor = color
         if showBackgroudColor {

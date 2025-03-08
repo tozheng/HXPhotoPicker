@@ -394,4 +394,30 @@ extension UIImage {
         return image
     }
     
+    func withColor(_ color: UIColor, backgroundColor: UIColor = .clear) -> UIImage {
+        let renderer = UIGraphicsImageRenderer(size: size)
+        let coloredImage = renderer.image { ctx in
+            let context = ctx.cgContext
+
+            // set background color
+            backgroundColor.setFill()
+            let roundedRect = UIBezierPath(roundedRect: CGRect(origin: .zero, size: size), cornerRadius: 4)
+            roundedRect.fill()
+
+            // draw color image
+            let rect = CGRect(origin: .zero, size: size)
+            context.interpolationQuality = .none
+            context.translateBy(x: 0, y: rect.height)
+            context.scaleBy(x: 1.0, y: -1.0)
+            context.setBlendMode(.normal)
+
+            if let cgImage = cgImage {
+                context.clip(to: rect, mask: cgImage)
+            }
+
+            color.setFill()
+            context.fill(rect)
+        }
+        return coloredImage
+    }
 }

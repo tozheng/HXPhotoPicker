@@ -50,6 +50,27 @@ extension UIFont: HXPickerCompatibleValue {
         }
         return .systemFont(ofSize: size, weight: .semibold)
     }
+
+    // traits
+    func withTraits(traits: UIFontDescriptor.SymbolicTraits...) -> UIFont? {
+        if let descriptor = fontDescriptor.withSymbolicTraits(UIFontDescriptor.SymbolicTraits(traits)) {
+            return UIFont(descriptor: descriptor, size: 0) //size 0 means keep the size as it is
+        }
+
+        return nil
+    }
+
+    func bold() -> UIFont? {
+        return withTraits(traits: .traitBold)
+    }
+
+    func italic() -> UIFont? {
+        return withTraits(traits: .traitItalic)
+    }
+
+    func boldItalic() -> UIFont? {
+        return withTraits(traits: .traitBold, .traitItalic)
+    }
 }
 
 public extension HXPickerWrapper where Base == UIFont {

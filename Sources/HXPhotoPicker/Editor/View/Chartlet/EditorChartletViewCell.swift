@@ -94,6 +94,7 @@ class EditorChartletViewCell: UICollectionViewCell {
         #else
         if let image = image {
             imageView.image = image
+            imageView.tintColor = UIColor.white
         }
         #endif
     }
